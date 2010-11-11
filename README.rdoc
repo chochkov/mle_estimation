@@ -1,0 +1,3 @@
+=== MLE estimation of Lognormal and Exponential parameters in a Competing Risks Model
+
+Two usage-measured lifetime random variables are discussed in a fixed-time life test. The items under study are considered to accumulate usage independently and with a different rate. The survival population is considered \textit{Lognormally distributed} (with parameters $\mu$ and $\sigma$), while the failure popoulation - \textit{Exponential} (with parameter $\lambda$). 
