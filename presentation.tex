@@ -16,7 +16,7 @@
 \hrule
 \section{Introduction.}
 \subsection{Assumptions.}
-\indent \indent Two usage-measured lifetime random variables are discussed in a fixed-time life test. The items under study are considered to accumulate usage independently and with a different rate. The survival ssspopulation is considered \textit{Lognormally distributed} (with parameters $\mu$ and $\sigma$), while the failure popoulation - \textit{Exponential} (with parameter $\lambda$). 
+\indent \indent Two usage-measured lifetime random variables are discussed in a fixed-time life test. The items under study are considered to accumulate usage independently and with a different rate. The survival population is considered \textit{Lognormally distributed} (with parameters $\mu$ and $\sigma$), while the failure popoulation - \textit{Exponential} (with parameter $\lambda$). 
 \\ 
 \\ \indent An estimation of the parameter vector ($\lambda$, $\mu$, $\sigma$)$'$ is sought using all usage data collected (from both survival and failure cases) 
 \begin{itemize}
@@ -76,29 +76,10 @@ L^*(\lambda, \mu, \sigma | \textbf{x}) &=& N_f \ln \lambda - \lambda \sum_{i = 1
 \begin{eqnarray}
 \frac{\partial^2 L^*(\lambda, \mu, \sigma | \textbf{x}) }{\partial \sigma^2} &=& \frac{1}{\sigma^2} \sum_{i \in N_f} \left[ \frac{\phi (z_i) z_i^3}{\overline \Phi} - 2\frac{\phi(z_i)z_i}{\overline \Phi} - \frac{\phi^2(z_i) z_i^2}{\overline\Phi ^2} \right] - \frac{3}{\sigma^2}\sum_{i \in N_s} z_i^2 + \frac{n_s}{\sigma^2}
 \end{eqnarray} 
-\begin{itemize}
-\item \textit{Theoretical Variance/Covariance Matrix} - this is the Inverse of the negative Hessian of the Log-Likelihood, taken at the true parameter values. I found and ignored some \textit{data sets} that produce negative variance or larger than one correlation between parameters;
-\item \textit{Eigen values of Hessian matrix} - I found and ignored some \textit{data sets} that produce non-negative definite Hessian;
-\item \textit{Convergence of Optimization Iterations} - I ignored \textit{data sets}, from which the \textit{Newton-Raphson-like} iterative method I use - \textit{nlminb()} - did not converge. In case convergence is not achieved for some data set, we could attempt to change the initial point for iterations, so ignoring these cases would not lead to loss of generality;
-\end{itemize}
 \section{Maximum Likelihood Estimators' properties.}
-\subsection{Mean of Score.} Testing the estimates and the data I collected about the $Log L^*$ during the simulations, I tested the average of the \textit{Gradient} elements taken at true parameter values (aka as Score). A well known property of the Maximum Likelihood Estimator is that the asymptotic average of the Score tends to zero. The simple proof comes below ($\Theta$ is the vector of parameters):\\
-\begin{eqnarray}
-E(\frac{\partial log L^*(\Theta | x)}{\partial \Theta}) = \int \frac{\partial L^*(\Theta | x)/\partial \Theta}{L^*(\Theta | x)}L^*(\Theta | x)\partial x = \int \frac{\partial L^*(\Theta | x)}{\partial \Theta} \partial x = \frac{\partial}{\partial \Theta} \int L^*(\Theta | x) \partial x 
-\end{eqnarray} 
-For the last equality to hold, however, regularity conditions need to be met. Specifically, the function $L^*(\Theta | x)$ and its first partial derivatives have to be continuous in all arguments.\\ 
-\\Table 1. shows the simulation details and histograms of the Score functions taken at the true parameter values. 
-\section{Full Likelihood.}
-According to the histograms on Table 1, the condition (2) holds only for parameter $\lambda$, whereas the scores with respect to $\mu$ and $\sigma$ do not tend to average at zero.\\
-\\To confirm this, I constructed a different likelihood based also on the generated data for censored mileages. The so constructed likelihood is a \textit{Full Likelihood} in the sense that every observation contributes to it and there's \textit{no unknown mileage}.   
-\begin{eqnarray}
-L(\lambda, \mu, \sigma, \eta, m, \textbf{x}, \textbf{y}) &=& \prod_{t=1}^{T} \left[ \prod_{i=1}^{r_t^{(a)}} \left( f_a(x_i^{(a)}) \bar{F_b}(x_i^{(a)}) \bar{G}(x_i^{(a)}) \right) \prod_{i=1}^{r_t^{(b)}} \left( f_b(x_i^{(b)}) \bar{F_a}(x_i^{(b)}) \bar{G}(x_i^{(b)}) \right) \prod_{i=i}^{c_t} \left( g(y_i)\bar{F_a}(y_i)\bar{F_b}(y_i) \right) \right] 
-\end{eqnarray}
-I apply the same approach as above to estimate all \textit{five} parameters simultaneously. I derived the Gradient and Hessian functions in this case and performed the same simulation - now with \textit{no practical use}, but only useful to compare my estimations. \\ 
-\section{Conclusion. } As expected, the results in the Full Likelihood case seem very good and seem to possess the properties of MLE; Table 2 shows them. However, the same trend is noticed with respect to the condition (2) - it holds for the \textit{Exponential} and \textit{Weibull} parameters, but does not seem to hold for the \textit {Log-normal} parameters.\\
-\\ Furthermore, the estimates for $\mu$ and $\sigma$ appear not to conform with another MLE property - the one for normality around the true value. Tables 2 shows the results for one parameter set from Likelihood (3) as well as the histograms of the Score functions. The same trends I obtained in other parameter sets as well.\\
-\\ These results make me doubt that the functions $L^*$ and $L$ or their first-order derivatives might be discontinuous with respect to parameters $\mu$ and $\sigma$. 
+\subsection{Normality of the estimators.} This can be seen from the results from 4 simulation sets of true value parameters. 1000 items under study, 150 repetitions for each parameter set. Diagram 1.  \\
+\subsection{Consistency of the estimators.} Simulations were done with the same parameter sets but with 2000 items under study, 150 simulation repetitions. Diagram 2.\\
 \section{Next steps.}
-I hope to check whether the departure from zero of the mean of the Score w.r.t. $\mu$ and $\sigma$ is significant. If so then, is it due to discontinuousness of the likelihood or their derivatives. At the same time I continue to try to find errors in my simulation code or calculations, in which I have so far been unsuccessful.
+Check the properties of the Variance Covariance matrix, Score, and perform more simulations on other true parameter sets and with more repetitions.
 \end{document}
 
