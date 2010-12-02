@@ -15,7 +15,7 @@ graphics.off()
 par(mfrow=c(4,3))
 
 # Parameters true value matrix - we study 4 parameter sets
-params <- matrix(c(6E-05,7.3,0.7, 4E-05,7.5,0.75, 2E-05,7.75,0.5, 1E-06,9,0.75), nrow = 4, ncol=3, byrow=TRUE,
+params <- matrix(c(6E-03,7.3,0.7, 4E-05,7.4,0.8, 2E-05,7.75,0.5, 3E-07,9,0.95), nrow = 4, ncol=3, byrow=TRUE,
                dimnames = list(c("Set 1", "Set 2", "Set 3", "Set 4"),
                                c("Lambda", "Mu", "Sigma")))
 
@@ -26,7 +26,7 @@ precision <- matrix(0, nrow = 4, ncol=3, byrow=TRUE,
 
 # Sample size /e.g. total units under test/
 assign('n', 1000)
-assign('repetitions', 500)
+assign('repetitions', 50)
 
 #repetitions.choice<-as.integer(readline("Number of repetitions, press 'enter' for default 100: \n"))
 #if(repetitions.choice > 0 && !is.na(repetitions.choice)){repetitions <- repetitions.choice}
@@ -43,6 +43,56 @@ for (params.set in 1:4){
 	assign('lambda0', params[params.set, 1])
 	assign('mu0', params[params.set, 2])
 	assign('sigma0', params[params.set, 3])
+
+	#=============================================================================================
+	# 0. Define the functions to compute Log-Likelihood, Gradient vector and Hessian matrix                                          
+	#---------------------------------------------------------------------------------------------
+
+	snor.pdf<- function(v) {return(dnorm(v,0,1))}                  # pdf of N(0,1)
+	snor.cdf<- function(v) {return(pnorm(v,0,1,lower.tail=TRUE))}  # cdf of N(0,1)
+	snor.rel<- function(v) {return(1-snor.cdf(v))}                 # reliability (survival function) of N(0,1)
+	
+	log_lik_fn = function(par){
+		lambda <- par[1]
+		mu <- par[2]
+		sigma <- par[3]
+		
+		part1 <- Nf*log(lambda) - lambda*sum(X) + sum(log(snor.rel((log(Xf) - mu)/sigma)))
+		part2 <- -sum(log(sigma*Xsurv)) + sum(log(snor.pdf((log(Xsurv) - mu)/sigma)))
+		
+		# we return the negative of the two parts because nlminb() is a minimizer.
+		return(-part1 - part2)
+		}
+
+	log_lik_grad = function(par){
+		lambda <- par[1]
+		mu <- par[2]
+		sigma <- par[3]
+	
+		d_lam <- Nf/lambda - sum(X)
+		d_mu  <- 1/sigma*sum(snor.pdf((log(Xf)-mu)/sigma)/snor.rel((log(Xf)-mu)/sigma)) + 1/sigma^2*sum(log(Xsurv) - mu)
+		d_sig <- sum(snor.pdf((log(Xf)-mu)/sigma)/snor.rel((log(Xf)-mu)/sigma) * (log(Xf)-mu)/sigma^2) - Nsurv/sigma + 1/sigma^3*sum((log(Xsurv) - mu)^2)
+	
+		return(c(-d_lam, -d_mu, -d_sig)) 
+		}
+
+	log_lik_hessian = function(par){
+		lambda <- par[1]
+		mu <- par[2]
+		sigma <- par[3]
+	
+		d_lam_lam <- -Nf/lambda^2
+		d_sig_sig <- 3/(sqrt(2*pi)*sigma^4) * sum((log(Xf) - mu)^2) -3/sigma^4 * sum((log(X) - mu)^2) + Nsurv/sigma^2
+		d_mu_mu   <- Nf/(sqrt(2*pi)*sigma^2) - n/sigma^2
+		d_mu_sig  <- 2/(sqrt(2*pi)*sigma^3) * sum(log(Xf) - mu) - 2/sigma^3 * sum(log(X) - mu)
+
+		H[1,1] 	 		 <- -(d_lam_lam)
+		H[2,2]	  		 <- -(d_mu_mu)
+		H[3,3]   		 <- -(d_sig_sig)
+		H[2,3] <- H[3,2] <- -(d_mu_sig)
+	
+	    return(H)
+		}
 
 	#=============================================================================================
 	# 1. Simulate the data-generating process for a Competing Risks Model
@@ -92,20 +142,23 @@ for (params.set in 1:4){
 			}
 		}
 		
-		#=============================================================================================
-		# 2. Estimator formulas:
-		#---------------------------------------------------------------------------------------------
-		
-		lambda_hat = Nf/sum(X)
-		mu_hat = (sum(log(Xsurv)) - 1/(2*sqrt(2*pi)))/Nsurv
-		sigma_hat = sqrt((sum((log(X) - mu_hat)^2) - 1/(sqrt(2*pi)) * sum((log(Xf) - mu_hat)^2))/Nsurv)
+#		#=============================================================================================
+#		# 2. Estimator formulas:
+#		#---------------------------------------------------------------------------------------------
+#		
+#		lambda_hat = Nf/sum(X)
+#		# mu_hat = (sum(log(Xsurv)) - 1/(2*sqrt(2*pi)))/Nsurv
+#		mu_hat = -(sum(log(X)) - 1/(2*sqrt(2*pi)) * sum(log(Xf)))/(1/sqrt(2*pi) * Nf - n)
+#		sigma_hat = sqrt((sum((log(X) - mu_hat)^2) - 1/(sqrt(2*pi)) * sum((log(Xf) - mu_hat)^2))/Nsurv)
 	
-		res[rep,] <- c(lambda_hat, mu_hat, sigma_hat)
+		mle <- nlminb(c(lambda0, mu0, sigma0), obj=log_lik_fn, grad=log_lik_grad, lower=c(lambda0/2,mu0/2,sigma0/2), upper=c(lambda0*2,mu0*2,sigma0*2), control=list(eval.max = 300, iter.max = 300))
+
+		res[rep,] <- mle$par
 
 	}
 
 	#=============================================================================================
-	# 3. Save the results for this iteration over the true values sets matrix - param
+	# 3. Display the results for this parameter set in Quartz
 	#---------------------------------------------------------------------------------------------
 
 	hist(res[,1],freq=FALSE,main=c(paste("Set ", params.set, ": Lognorm:", Nsurv, ", Expon:", Nf, sep='')), xlab=paste("Lambda, true val.", lambda0), ylab="")
@@ -133,11 +186,12 @@ for (params.set in 1:4){
 	# 4. Print the results table for this parameters set:
 	#---------------------------------------------------------------------------------------------
 	res.average = c(mean(res[,1]), mean(res[,2]), mean(res[,3]))
+	res.variance = c(var(res[,1]), var(res[,2]), var(res[,3]))
 	precision[params.set,] = (res.average - c(lambda0, mu0, sigma0))/c(lambda0, mu0, sigma0) * 100
 
-	res.list<- list(True.Value =params[params.set,], Avg.MLE =res.average, Bias.percentage =precision[params.set,], Lognormal.items =Nsurv, Exponential.items =Nf)
+	res.list<- list(True.Value =params[params.set,], Avg.MLE =res.average, Est.Variance =res.variance, Bias.percentage =precision[params.set,], Lognormal.items =c(Nsurv, '', ''), Exponential.items =c(Nf, '', ''))
 	res.frame<- data.frame(res.list)
-	rownames(res.frame)<- c(paste("Set:", params.set, 'lam'), paste("Set:", params.set, 'mu'), paste("Set:", params.set, 'sigma'))
+	rownames(res.frame)<- c(paste("Set:", params.set, 'Lam'), 'Mu', 'Sigma')
 
 	print(res.frame)
 

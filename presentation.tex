@@ -22,29 +22,52 @@
 \begin{itemize}
 \item $\eta \sim Lognormal$ 
 \item $\psi \sim Exponential$ 
-\item $f_\eta(x) = \frac{1}{x \sigma \sqrt{2 \pi}} e^{-\frac{\left( \ln x - \mu \right)^2}{2\sigma^2}}$ is the \textit{probability densitiy function} of the Lognormal distribution;
-\item $\overline F_\eta(x) = 1 - \frac{1}{\sqrt{2 \pi}} e^{-\frac{\left( \ln x - \mu \right)^2}{2\sigma^2}}$ is its \textit{survival function}
-\item $f_\psi(x) = \lambda e^{- \lambda x}$ is the \textit{pdf} of the Exponential distribution; 
-\item $\overline F_\psi(x) = e^{- \lambda x}$ is its \textit{survival function};
-\item $\textbf{x}$ is the data vector 
+\item $f_\eta(x) = \frac{1}{x \sigma \sqrt{2 \pi}} e^{-\frac{\left( \ln x - \mu \right)^2}{2\sigma^2}} = \frac{1}{x \sigma} \phi \left( \frac{\ln x - \mu}{\sigma} \right) $ is the \textit{probability densitiy function} of the Lognormal distribution, with $\phi$ being the density function of the Standard Normal Distribution
+\item $\overline F_\eta(x) = 1 - \frac{1}{\sqrt{2 \pi}} e^{-\frac{\left( \ln x - \mu \right)^2}{2\sigma^2}} = \overline \Phi \left(\frac{\ln x - \mu}{\sigma}\right)$ is its \textit{survival function}, with $\overline\Phi$ being the survival function of the Standard Normal Distribution
+\item $f_\psi(x) = \lambda e^{- \lambda x}$ is the \textit{pdf} of the Exponential distribution 
+\item $\overline F_\psi(x) = e^{- \lambda x}$ is its \textit{survival function}
 \item $N_f = \{i : x_i\ is\ failed \}$ and $n_f  = \# N_f$ (i.e. number of failures) 
 \item $N_s = \{i : x_i\ is\ survived \}$ and $n_f  = \# N_s$ (i.e. number of survivals)
 \item $n$ is the total number of units under test ($n = n_f + n_s$)
+\item $\textbf{x}$ is the data vector and $\textbf{x} = \left[ \textbf{x}^f, \textbf{x}^s \right] = \left[ x_1^f, ... , x_{n_f}^f, x_1^s, ... , x_{n_s}^s \right] $, where:
+\item $\textbf{x}^f$ is the data for failed items, $\textbf{x}^f = \left[ x_1^f, ... , x_{n_f}^f \right] $
+\item $\textbf{x}^s$ is the data for survived items, $\textbf{x}^s = \left[ x_1^s, ... , x_{n_s}^s \right] $
 \item $\lambda, \mu, \sigma, x > 0$
 \end{itemize}
 \subsection{Maximum Likelihood Method.}
 \indent \indent The Likelihood function is given by (since $\eta$ and $\psi$ are independent):
 \begin{eqnarray}
-L(\lambda, \mu, \sigma | \textbf{x}) &=& \prod_{i \in N_f} \left( f_\psi \left( x_i \right) \overline F_\eta \left( x_i \right) \right)\prod_{i \in N_s} \left( f_\eta \left( x_i \right) \overline F_\psi \left( x_i \right) \right)
+L(\lambda, \mu, \sigma | \textbf{x}) &=& \prod_{i \in N_f} \left[ f_\psi \left( x_i^f \right) \overline F_\eta \left( x_i^f \right) \right]\prod_{i \in N_s} \left[ f_\eta \left( x_i^s \right) \overline F_\psi \left( x_i^s \right) \right]
 \end{eqnarray}
-MLE method applied in this case prescribes that $\log L^*$ be derived with respect to $\lambda$, $\mu$ and $\sigma$ up to its second derivatives. The zeros ($\hat{\lambda}$, $\hat{\mu}$, $\hat{\sigma}$) of the first derivatives vector, aka \textit{Gradient} will be the sought estimates if they turn the matrix of second derivatives, aka \textit{Hessian} to a negative definite. The Hessian being negative definite will imply that $\log L^*$ is convex in some neighbourhood around the found extremum point, i.e. that point maximizes the Likelihood.\\ 
-\\I derived the Gradient and Hessian and numerically optimized the function $\log L^*$ for $\lambda$, $\mu$ and $\sigma$ using:
-\begin{itemize}
-\item \textit{Newton-Raphson-like} iterative algorithm for numerical optimization. I used the routine \textit{nlminb()} in R;
-\item \textit{Gauss-Hermitte} method for numerical integration;
-\end{itemize}
-This was repeated a number of times for different data set, under the above assumptions and the average of the estimates was taken.
-\subsection{Correction of Bias.} Such an estimation is the ultimate goal of the current research. However, up to now the results, to which I arrived are biased with the cause or trend of this bias being yet unconfirmed. Attempting to justify or remove the bias, and following Professors' comments, I adjusted the estimates by ignoring data sets, which produced absurd results in: 
+\indent Now from the above we can derive the Log Likelihood:
+\begin{eqnarray}
+LogL = L^*(\lambda, \mu, \sigma | \textbf{x}) &=& \sum_{i \in N_f} \ln \left[ f_\psi(x_i^f) \right] + \sum_{i \in N_f} \ln \left[ \overline F_\eta(x_i^f) \right] + \sum_{i \in N_s} \ln \left[ f_\eta (x_i^s) \right] + \sum_{i \in N_s} \ln \left[ \overline F_\psi(x_i^s) \right]
+\end{eqnarray}
+\indent And if we apply the above notation and rework:
+\begin{eqnarray}
+L^*(\lambda, \mu, \sigma | \textbf{x}) &=& N_f \ln \lambda - \lambda \sum_{i = 1}^n x_i + \sum_{i \in N_f} \ln \overline \Phi \left( \frac{\ln x_i^f - \mu}{\sigma} \right) - \sum_{i \in N_s} \ln \sigma x_i^s + \sum_{i \in N_s} \ln \phi \left( \frac{\ln x_i^s - \mu}{\sigma} \right)
+\end{eqnarray}
+\indent The MLE estimators $\left(\hat \lambda, \hat \mu, \hat \sigma \right)$ would be the ones that turn $L^*$ into a minimum, so now we need to compute the \textit{Gradient} vector and \textit{Hessian} matrix in order to find them. Furthermore we would like to show that the estimators have the \textit{consistency} property.\\ 
+\subsection{First order derivatives of $L^*$ w.r.t $\left(\lambda, \mu, \sigma \right)$}
+\begin{eqnarray}
+\frac{\partial L^*(\lambda, \mu, \sigma | \textbf{x}) }{\partial \lambda} &=& \frac{n_f}{\lambda} - \sum_{i = 1}^n x_i 
+\end{eqnarray} 
+\begin{eqnarray}
+\frac{\partial L^*(\lambda, \mu, \sigma | \textbf{x}) }{\partial \mu} &=& \frac{1}{\sigma}\sum_{i \in N_f} \frac{\phi \left( \frac{\ln x_i^f - \mu}{\sigma} \right)}{\overline \Phi \left( \frac{\ln x_i^f - \mu}{\sigma} \right)} + \frac{1}{\sigma ^ 2}\sum_{i \in N_s}\left(\ln x_i^s - \mu\right) 
+\end{eqnarray} 
+\begin{eqnarray}
+\frac{\partial L^*(\lambda, \mu, \sigma | \textbf{x}) }{\partial \sigma} &=& - \sum_{i \in N_f} \frac{\phi \left( \frac{\ln x_i^f - \mu}{\sigma} \right) \frac{\ln x_i^f - \mu}{\sigma ^ 2}}{\overline \Phi \left( \frac{\ln x_i^f - \mu}{\sigma} \right)} - \frac{n_s}{\sigma} + \sum_{i \in N_s} \frac{\left(\ln x_i^s - \mu\right)^2}{\sigma ^ 3} 
+\end{eqnarray} 
+\subsection{Second order derivatives of $L^*$ w.r.t $\left(\lambda, \mu, \sigma \right)$}
+\begin{eqnarray}
+\frac{\partial^2 L^*(\lambda, \mu, \sigma | \textbf{x}) }{\partial \lambda^2} &=& - \frac{n_f}{\lambda ^ 2} 
+\end{eqnarray} 
+\begin{eqnarray}
+\frac{\partial L^*(\lambda, \mu, \sigma | \textbf{x}) }{\partial \mu} &=& \sum_{i \in N_f} \frac{\phi \left( \frac{\ln x_i^f - \mu}{\sigma} \right)}{\overline \Phi \left( \frac{\ln x_i^f - \mu}{\sigma} \right)} + \sum_{i \in N_s} \frac{\ln x_i^s - \mu}{\sigma ^ 2} 
+\end{eqnarray} 
+\begin{eqnarray}
+\frac{\partial L^*(\lambda, \mu, \sigma | \textbf{x}) }{\partial \sigma} &=& - \sum_{i \in N_f} \frac{\phi \left( \frac{\ln x_i^f - \mu}{\sigma} \right) \frac{\ln x_i^f - \mu}{\sigma ^ 2}}{\overline \Phi \left( \frac{\ln x_i^f - \mu}{\sigma} \right)} - \frac{n_s}{\sigma} + \sum_{i \in N_s} \frac{\left(\ln x_i^s - \mu\right)^2}{\sigma ^ 3} 
+\end{eqnarray} 
 \begin{itemize}
 \item \textit{Theoretical Variance/Covariance Matrix} - this is the Inverse of the negative Hessian of the Log-Likelihood, taken at the true parameter values. I found and ignored some \textit{data sets} that produce negative variance or larger than one correlation between parameters;
 \item \textit{Eigen values of Hessian matrix} - I found and ignored some \textit{data sets} that produce non-negative definite Hessian;
