@@ -15,7 +15,7 @@ graphics.off()
 par(mfrow=c(4,3))
 
 # Parameters true value matrix - we study 4 parameter sets
-params <- matrix(c(6E-03,7.3,0.7, 4E-05,7.4,0.8, 2E-05,7.75,0.5, 3E-07,9,0.95), nrow = 4, ncol=3, byrow=TRUE,
+params <- matrix(c(6E-04,7.3,0.7, 4E-05,7.4,0.8, 2E-05,7.75,0.5, 1E-06,9,0.95), nrow = 4, ncol=3, byrow=TRUE,
                dimnames = list(c("Set 1", "Set 2", "Set 3", "Set 4"),
                                c("Lambda", "Mu", "Sigma")))
 
@@ -26,7 +26,7 @@ precision <- matrix(0, nrow = 4, ncol=3, byrow=TRUE,
 
 # Sample size /e.g. total units under test/
 assign('n', 1000)
-assign('repetitions', 50)
+assign('repetitions', 10)
 
 #repetitions.choice<-as.integer(readline("Number of repetitions, press 'enter' for default 100: \n"))
 #if(repetitions.choice > 0 && !is.na(repetitions.choice)){repetitions <- repetitions.choice}
@@ -51,6 +51,7 @@ for (params.set in 1:4){
 	snor.pdf<- function(v) {return(dnorm(v,0,1))}                  # pdf of N(0,1)
 	snor.cdf<- function(v) {return(pnorm(v,0,1,lower.tail=TRUE))}  # cdf of N(0,1)
 	snor.rel<- function(v) {return(1-snor.cdf(v))}                 # reliability (survival function) of N(0,1)
+	snor.fail.rate<- function(v) {return(snor.pdf(v)/snor.rel(v))}     # failure rate function of N(0,1)
 	
 	log_lik_fn = function(par){
 		lambda <- par[1]
@@ -70,8 +71,8 @@ for (params.set in 1:4){
 		sigma <- par[3]
 	
 		d_lam <- Nf/lambda - sum(X)
-		d_mu  <- 1/sigma*sum(snor.pdf((log(Xf)-mu)/sigma)/snor.rel((log(Xf)-mu)/sigma)) + 1/sigma^2*sum(log(Xsurv) - mu)
-		d_sig <- sum(snor.pdf((log(Xf)-mu)/sigma)/snor.rel((log(Xf)-mu)/sigma) * (log(Xf)-mu)/sigma^2) - Nsurv/sigma + 1/sigma^3*sum((log(Xsurv) - mu)^2)
+		d_mu  <- 1/sigma*sum(snor.fail.rate((log(Xf)-mu)/sigma)) + 1/sigma^2*sum(log(Xsurv) - mu)
+		d_sig <- sum(snor.fail.rate((log(Xf)-mu)/sigma)*(log(Xf)-mu)/sigma^2) - Nsurv/sigma + 1/sigma^3*sum((log(Xsurv) - mu)^2)
 	
 		return(c(-d_lam, -d_mu, -d_sig)) 
 		}
@@ -82,10 +83,10 @@ for (params.set in 1:4){
 		sigma <- par[3]
 	
 		d_lam_lam <- -Nf/lambda^2
+		d_mu_mu   <- 1/sigma^3 * sum(snor.fail.rate((log(Xf)-mu)/sigma)*(1+snor.fail.rate((log(Xf)-mu)/sigma))*(log(Xf)-mu)) - 1/sigma^2
+		d_mu_sig  <- 1/sigma^2 * sum(snor.fail.rate((log(Xf)-mu)/sigma)) + 1/sigma^4 * sum(snor.fail.rate((log(Xf)-mu)/sigma)*(1+snor.fail.rate((log(Xf)-mu)/sigma))*(log(Xf)-mu)^2) - 2/sigma^3 * sum(log(Xsurv)-mu)
 		d_sig_sig <- 3/(sqrt(2*pi)*sigma^4) * sum((log(Xf) - mu)^2) -3/sigma^4 * sum((log(X) - mu)^2) + Nsurv/sigma^2
-		d_mu_mu   <- Nf/(sqrt(2*pi)*sigma^2) - n/sigma^2
-		d_mu_sig  <- 2/(sqrt(2*pi)*sigma^3) * sum(log(Xf) - mu) - 2/sigma^3 * sum(log(X) - mu)
-
+		
 		H[1,1] 	 		 <- -(d_lam_lam)
 		H[2,2]	  		 <- -(d_mu_mu)
 		H[3,3]   		 <- -(d_sig_sig)
@@ -151,10 +152,11 @@ for (params.set in 1:4){
 #		mu_hat = -(sum(log(X)) - 1/(2*sqrt(2*pi)) * sum(log(Xf)))/(1/sqrt(2*pi) * Nf - n)
 #		sigma_hat = sqrt((sum((log(X) - mu_hat)^2) - 1/(sqrt(2*pi)) * sum((log(Xf) - mu_hat)^2))/Nsurv)
 	
-		mle <- nlminb(c(lambda0, mu0, sigma0), obj=log_lik_fn, grad=log_lik_grad, lower=c(lambda0/2,mu0/2,sigma0/2), upper=c(lambda0*2,mu0*2,sigma0*2), control=list(eval.max = 300, iter.max = 300))
+		mle <- nlminb(c(lambda0*.85, mu0*.85, sigma0*.85), obj=log_lik_fn, grad=log_lik_grad, hes=log_lik_hessian, lower=c(lambda0/2,mu0/2,sigma0/2), upper=c(lambda0*2,mu0*2,sigma0*2), control=list(eval.max = 300, iter.max = 300))
 
 		res[rep,] <- mle$par
-
+		cat(mle$message)
+	
 	}
 
 	#=============================================================================================

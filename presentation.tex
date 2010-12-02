@@ -49,24 +49,32 @@ L^*(\lambda, \mu, \sigma | \textbf{x}) &=& N_f \ln \lambda - \lambda \sum_{i = 1
 \end{eqnarray}
 \indent The MLE estimators $\left(\hat \lambda, \hat \mu, \hat \sigma \right)$ would be the ones that turn $L^*$ into a minimum, so now we need to compute the \textit{Gradient} vector and \textit{Hessian} matrix in order to find them. Furthermore we would like to show that the estimators have the \textit{consistency} property.\\ 
 \subsection{First order derivatives of $L^*$ w.r.t $\left(\lambda, \mu, \sigma \right)$}
+\indent Let's denote: $z_i^{f,s} = \frac{\left(\ln x_i^{f,s} - \mu \right)}{\sigma}$. Then we derive: 
+\begin{eqnarray}
+\frac{\partial z}{\partial \mu} = - \frac{1}{\sigma} , \frac{\partial z} {\partial \sigma} = - \frac{1}{\sigma}z , \frac{\partial \phi}{\partial \sigma} = \frac{1}{\sigma}\phi z^2 , \frac{\partial \phi}{\partial \mu} = \frac{1}{\sigma}\phi z 
+\end{eqnarray} 
 \begin{eqnarray}
 \frac{\partial L^*(\lambda, \mu, \sigma | \textbf{x}) }{\partial \lambda} &=& \frac{n_f}{\lambda} - \sum_{i = 1}^n x_i 
 \end{eqnarray} 
 \begin{eqnarray}
-\frac{\partial L^*(\lambda, \mu, \sigma | \textbf{x}) }{\partial \mu} &=& \frac{1}{\sigma}\sum_{i \in N_f} \frac{\phi \left( \frac{\ln x_i^f - \mu}{\sigma} \right)}{\overline \Phi \left( \frac{\ln x_i^f - \mu}{\sigma} \right)} + \frac{1}{\sigma ^ 2}\sum_{i \in N_s}\left(\ln x_i^s - \mu\right) 
+\frac{\partial L^*(\lambda, \mu, \sigma | \textbf{x}) }{\partial \mu} &=& \frac{1}{\sigma}\sum_{i \in N_f} \frac{\phi \left( z_i^f \right)}{\overline \Phi \left( z_i^f \right)} + \frac{1}{\sigma}\sum_{i \in N_s}z_i^s 
 \end{eqnarray} 
 \begin{eqnarray}
-\frac{\partial L^*(\lambda, \mu, \sigma | \textbf{x}) }{\partial \sigma} &=& - \sum_{i \in N_f} \frac{\phi \left( \frac{\ln x_i^f - \mu}{\sigma} \right) \frac{\ln x_i^f - \mu}{\sigma ^ 2}}{\overline \Phi \left( \frac{\ln x_i^f - \mu}{\sigma} \right)} - \frac{n_s}{\sigma} + \sum_{i \in N_s} \frac{\left(\ln x_i^s - \mu\right)^2}{\sigma ^ 3} 
+\frac{\partial L^*(\lambda, \mu, \sigma | \textbf{x}) }{\partial \sigma} &=& \frac{1}{\sigma} \sum_{i \in N_f} \frac{\phi \left( z_i^f \right) z_i^f }{\overline \Phi \left( z_i^f \right)} + \frac{1}{\sigma}\sum_{i \in N_s} (z_i^s)^2 - \frac{n_s}{\sigma} 
 \end{eqnarray} 
-\subsection{Second order derivatives of $L^*$ w.r.t $\left(\lambda, \mu, \sigma \right)$}
+\subsection{Second order derivatives of $L^*$ w.r.t $\left(\lambda, \mu, \sigma \right)$}\
+\indent Let's denote again: $z_i^{f,s} = \frac{\left(\ln x_i^{f,s} - \mu \right)}{\sigma}$. Then we derive: 
 \begin{eqnarray}
 \frac{\partial^2 L^*(\lambda, \mu, \sigma | \textbf{x}) }{\partial \lambda^2} &=& - \frac{n_f}{\lambda ^ 2} 
 \end{eqnarray} 
 \begin{eqnarray}
-\frac{\partial L^*(\lambda, \mu, \sigma | \textbf{x}) }{\partial \mu} &=& \sum_{i \in N_f} \frac{\phi \left( \frac{\ln x_i^f - \mu}{\sigma} \right)}{\overline \Phi \left( \frac{\ln x_i^f - \mu}{\sigma} \right)} + \sum_{i \in N_s} \frac{\ln x_i^s - \mu}{\sigma ^ 2} 
+\frac{\partial^2 L^*(\lambda, \mu, \sigma | \textbf{x}) }{\partial \mu^2} &=& \frac{1}{\sigma^2}\sum_{i \in N_f} \left[ \frac{\phi \left( z_i^f \right)}{\overline \Phi \left( z_i^f \right)}\left( 1 + \frac{\phi \left( z_i^f \right)}{\overline \Phi \left( z_i^f \right)} \right) z_i^f \right] - \frac{1}{\sigma^2} 
 \end{eqnarray} 
 \begin{eqnarray}
-\frac{\partial L^*(\lambda, \mu, \sigma | \textbf{x}) }{\partial \sigma} &=& - \sum_{i \in N_f} \frac{\phi \left( \frac{\ln x_i^f - \mu}{\sigma} \right) \frac{\ln x_i^f - \mu}{\sigma ^ 2}}{\overline \Phi \left( \frac{\ln x_i^f - \mu}{\sigma} \right)} - \frac{n_s}{\sigma} + \sum_{i \in N_s} \frac{\left(\ln x_i^s - \mu\right)^2}{\sigma ^ 3} 
+\frac{\partial^2 L^*(\lambda, \mu, \sigma | \textbf{x}) }{\partial \mu \partial\sigma} &=& \frac{1}{\sigma^2} \sum_{i \in N_f} \frac{\phi \left( z_i^f \right)}{\overline \Phi \left( z_i^f \right)} + \frac{1}{\sigma^2}\sum_{i \in N_f} \left[ \frac{\phi \left( z_i^f \right)}{\overline \Phi \left( z_i^f \right)}\left( 1 + \frac{\phi \left( z_i^f \right)}{\overline \Phi \left( z_i^f \right)} \right) z_i^f \right] - \frac{2}{\sigma^2}\sum_{i \in N_s} z_i^s 
+\end{eqnarray} 
+\begin{eqnarray}
+\frac{\partial^2 L^*(\lambda, \mu, \sigma | \textbf{x}) }{\partial \sigma^2} &=& \frac{1}{\sigma^2} \sum_{i \in N_f} \left[ \frac{\phi (z_i) z_i^3}{\overline \Phi} - 2\frac{\phi(z_i)z_i}{\overline \Phi} - \frac{\phi^2(z_i) z_i^2}{\overline\Phi ^2} \right] - \frac{3}{\sigma^2}\sum_{i \in N_s} z_i^2 + \frac{n_s}{\sigma^2}
 \end{eqnarray} 
 \begin{itemize}
 \item \textit{Theoretical Variance/Covariance Matrix} - this is the Inverse of the negative Hessian of the Log-Likelihood, taken at the true parameter values. I found and ignored some \textit{data sets} that produce negative variance or larger than one correlation between parameters;
