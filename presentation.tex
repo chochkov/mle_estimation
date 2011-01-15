@@ -37,7 +37,7 @@
 \subsection{Maximum Likelihood Method.}
 \indent \indent The Likelihood function is given by (since $\eta$ and $\psi$ are independent):
 \begin{eqnarray}
-\delta (\lambda, \mu, \sigma) \sim P[\psi < \eta | Fail] * P[\eta < \psi | Surv] = f_\psi(x | F)\overline F_\eta(x | F) f_\eta(x | S) F_\psi(x | S) 
+\delta (\lambda, \mu, \sigma) \sim P[\psi < \eta | Fail] * P[\eta < \psi | Surv] = f_\psi(x | F)\overline F_\eta(x | F) * f_\eta(x | S) \overline F_\psi(x | S) 
 \end{eqnarray}
 \begin{eqnarray}
 L(\lambda, \mu, \sigma | \textbf{x}) &=& \prod_{i \in N_f} \left[ f_\psi \left( x_i^f \right) \overline F_\eta \left( x_i^f \right) \right]\prod_{i \in N_s} \left[ f_\eta \left( x_i^s \right) \overline F_\psi \left( x_i^s \right) \right]
