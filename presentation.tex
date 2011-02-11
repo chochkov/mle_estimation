@@ -10,7 +10,7 @@
 \usepackage{multicol}
 \title{\hrule \vspace{0.3cm}MLE from a Competing Risks Model of an Exponential Failure and a Lognormal Survival}
 \date{10 November 2010}
-\author{Nikola Chochkov, MSc Statistics, Humboldt University Berlin}
+\author{Nikola Chochkov, student number 542064 MSc Statistics, Humboldt University Berlin}
 \begin{document}
 \maketitle
 \hrule
@@ -50,7 +50,7 @@ LogL = L^*(\lambda, \mu, \sigma | \textbf{x}) &=& \sum_{i \in N_f} \ln \left[ f_
 \begin{eqnarray}
 L^*(\lambda, \mu, \sigma | \textbf{x}) &=& N_f \ln \lambda - \lambda \sum_{i = 1}^n x_i + \sum_{i \in N_f} \ln \overline \Phi \left( \frac{\ln x_i^f - \mu}{\sigma} \right) - \sum_{i \in N_s} \ln \sigma x_i^s + \sum_{i \in N_s} \ln \phi \left( \frac{\ln x_i^s - \mu}{\sigma} \right)
 \end{eqnarray}
-\indent The MLE estimators $\left(\hat \lambda, \hat \mu, \hat \sigma \right)$ would be the ones that turn $L^*$ into a minimum, so now we need to compute the \textit{Gradient} vector and \textit{Hessian} matrix in order to find them. Furthermore we would like to show that the estimators have the \textit{consistency} property.\\ 
+\indent The MLE estimators $\left(\hat \lambda, \hat \mu, \hat \sigma \right)$ would be the ones that turn $L^*$ into a maximum, so now we need to compute the \textit{Gradient} vector and \textit{Hessian} matrix in order to find them. Furthermore we would like to show that the estimators have the \textit{consistency} property.\\ 
 \subsection{First order derivatives of $L^*$ w.r.t $\left(\lambda, \mu, \sigma \right)$}
 \indent Let's denote: $z_i^{f,s} = \frac{\left(\ln x_i^{f,s} - \mu \right)}{\sigma}$. Then we derive: 
 \begin{eqnarray}
